@@ -11,7 +11,8 @@ namespace po = boost::program_options;
 #include <vector>
 #include "geometry.h"
 #include "dataWindow.h"
-#include "hdf5.h"
+//#include "hdf5.h"
+#include <cmath>
 
 using namespace std;
 using namespace Eigen;
@@ -21,6 +22,9 @@ template<class T>
 ostream& operator<<(ostream& os, const vector<T>& v);
 void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, double a); 
 void stepInTime(SparseMatrix<double>* fd, SparseMatrix<double>* cd, Geometry* grid, double k, double h, double a);
+double L1_norm(Geometry *toGrid, double *numerical_solution);
+double L1_norm(Geometry *toGrid, double *numerical_solution);
+double LInfinity_norm(Geometry *toGrid, double *numerical_solution);
 //void writeH5(std::ofstream xdm5, string outputDir, Geometry* toGrid, int timeStep);
 
 //This program models the advection equation for various conservative finite difference methods
@@ -29,6 +33,7 @@ int main(int ac, char *av[]) {
     double h = 0.0;
     double a = 0.0;
     double startT, endT, dt, ts;
+    double CFL;
     string icType, bndryType;
     string FDM;
     string config_file;
@@ -47,12 +52,12 @@ int main(int ac, char *av[]) {
       ("M", po::value<double>(&cellCount), "number of cells within the domain, must be a power of 2")
       ("startTime", po::value<double>(&startT), "Initial Time")
       ("endTime", po::value<double>(&endT), "End Time")
-      ("timeWidth", po::value<double>(&dt), "Width of each time step")
       ("finiteDifferenceMethod", po::value<string>(&FDM), "Possibilities are Upwind, Lax-Friedrichs, Lax-Wendroff")
       ("initialConditions", po::value<string>(&icType), "Type of initial condition, (Square Wave, Semicircle, Gaussian Pulse")
       ("boundaryConditions", po::value<string>(&bndryType), "Type of Boundary Condition, (Periodic")
       ("advectionConstant", po::value<double>(&a), "speed")
       ("outputDirectory", po::value<string>(&outputDir), "Output Directory")
+      ("CFL", po::value<double>(&CFL), "CFL number")
     ;
     
     po::options_description cmdline_options;
@@ -99,6 +104,7 @@ int main(int ac, char *av[]) {
 
   //Initializing the Problem
   h = 1/cellCount;
+  dt = CFL*h/a;
   ts = (endT-startT)/dt;
   // Plus 2 since we need one extra cell on each far side due to periodicness. 
   Geometry grid(cellCount, h, icType); 
@@ -113,14 +119,49 @@ int main(int ac, char *av[]) {
   cout << uWindow.displayMatrix() << endl;
   for( int i=0; i<ts; i++) {
     computeNextTimeStep(toGrid, FDM, dt, h, a); 
+  }
+  
     DataWindow<double> uNextWindow (toGrid->dispU(), toGrid->getM(), 1);
     cout << uNextWindow.displayMatrix() << endl << endl; 
-  }
-
+   
   return 0;
 }
 
 
+double L1_norm(Geometry *toGrid, double *numerical_solution ) {
+   double sum;
+  double N = toGrid->getM();
+  double* numerical_sol = toGrid->dispU();
+
+  for(int i=0; i < N; i++) {
+    sum += abs(numerical_sol[i]);
+  }
+  return sum;
+}   
+
+double L2_norm(Geometry *toGrid, double *numerical_solution) {
+  double sum;
+  double N = toGrid->getM();
+  double* numerical_sol = toGrid->dispU();
+
+  for(int i=0; i < N; i++) {
+    sum += numerical_sol[i]*numerical_sol[i]; 
+  }
+  return sum;
+}
+  
+double LInfinity_norm(Geometry *toGrid, double *numerical_solution) {
+   double max=0;
+  double N = toGrid->getM();
+  double* numerical_sol = toGrid->dispU();
+
+  for(int i=0; i < N; i++) {
+    if ( abs(numerical_sol[i]) > max ) 
+      max = numerical_sol[i];
+  }
+  return max;
+}
+ 
 // ----------------------------
 //First Order Difference
 /*
@@ -175,16 +216,38 @@ ostream& operator<<(ostream& os, const vector<T>& v)
 }
 
 void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, double a) {
-  int N = toGrid->getM();
-  double *U = grid->getU();
-  double CFL = deltaT*a/h;
+  int N = (int) toGrid->getM();
+  double *U = toGrid->getU();
+  double *UNext = new double[N+2];
+  double CFL = (deltaT*a)/h;
+
+  for(int i=0; i < N+2; i++) 
+    UNext[i] = 0;
 
   if ( FDM.compare("Upwind") == 0 ) {
-    for (int i = 0; i < N; i++) 
-      U[i] = U[i] + CFL(U[i-1] - U[i]);  
+    for (int i = 1; i < N+1; i++) 
+      UNext[i] = U[i] + CFL * (U[i-1] - U[i]);  
+  }
+  else if ( FDM.compare("Lax-Friedrichs") == 0 ) {
+    for (int i= 1; i < N+1; i++)
+      UNext[i] = 0.5 * (U[i-1] + U[i+1]) + (CFL/2) * (U[i-1] - U[i+1]);
+  }
+  else if ( FDM.compare("Lax-Wendroff") == 0 ) {
+    double uLeftHalf, uRightHalf;
+    for (int i = 1; i < N+1; i++) {
+      uRightHalf = 0.5 * (U[i] + U[i+1]) + (CFL/2) * (U[i] - U[i+1]);
+      uLeftHalf = 0.5 * (U[i] + U[i-1]) + (CFL/2) * (U[i] - U[i-1]);
+      UNext[i] = U[i] + CFL * (uLeftHalf - uRightHalf); 
+    }
   }
   else
     cout << "Specified " << FDM <<" has not been implemented yet" << endl;
+ 
+  for(int i=1; i < N+1; i++) 
+    U[i] = UNext[i];
+
+  U[0] = UNext[N];
+  U[N+1] = UNext[1];
 } 
 
 void stepInTime(SparseMatrix<double>* fda, SparseMatrix<double>* identity, Geometry* grid, double k, double h, double a) {

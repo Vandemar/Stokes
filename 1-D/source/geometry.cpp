@@ -10,6 +10,7 @@ Geometry::Geometry(double numberOfCells, double dx, string initialCond ) {
   double x;
   int N = (int) M;  
   U = new double[N+2];
+  
   //initializing temperature data to a square wave
   if ( initialCond.compare("Square Wave") == 0) {
     for(int i =1; i <= N/2;  ++i) {
@@ -35,9 +36,10 @@ Geometry::Geometry(double numberOfCells, double dx, string initialCond ) {
      }
   }
   else {
-    U[1] = 1; 
-    for( int i = 2; i <= N/2; i++) 
-      U[i] = U[N+1-i] = 0;
+   for(int i=0; i < N; i++) {
+     x = i/M;
+     U[i+1]=cos(2*PI*x);
+   }
   } 
   
   //Periodic boundary conditions
@@ -50,9 +52,9 @@ Geometry::~Geometry() {
 }
 
 double* Geometry::dispU() {
-  double *disp_u = new double[M];
-  double *full_u = getU();
+  double* disp_u = new double[(int) M];
+  double *full_u = this->getU();
   for ( int j=1; j<=M; j++) 
     disp_u[j-1] = full_u[j];
   return disp_u;
-} 
+}
