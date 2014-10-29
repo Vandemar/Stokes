@@ -100,24 +100,27 @@ int main(int ac, char *av[]) {
   //Initializing the Problem
   h = 1/cellCount;
   ts = (endT-startT)/dt;
+  // Plus 2 since we need one extra cell on each far side due to periodicness. 
   Geometry grid(cellCount, h, icType); 
   Geometry* toGrid = &grid;
   int n = (int) toGrid->getM();
   int i,j;
   cout << "Spacing of adjacent cells is: " << h << "\n";
   cout << "Number of Time Steps is set to: " << ts << "\n";
-  DataWindow<double> uWindow (grid.getU(), grid.getM(), 1);
+  DataWindow<double> uWindow (grid.dispU(), grid.getM(), 1);
   cout << "At time step 0:" << endl;
   cout << "Initial conditions have been set to a " << icType << endl;
   cout << uWindow.displayMatrix() << endl;
   for( int i=0; i<ts; i++) {
     computeNextTimeStep(toGrid, FDM, dt, h, a); 
-    DataWindow<double> uNextWindow (toGrid->getU(), toGrid->getM(), 1);
+    DataWindow<double> uNextWindow (toGrid->dispU(), toGrid->getM(), 1);
     cout << uNextWindow.displayMatrix() << endl << endl; 
   }
 
   return 0;
 }
+
+
 // ----------------------------
 //First Order Difference
 /*
@@ -170,6 +173,19 @@ ostream& operator<<(ostream& os, const vector<T>& v)
     copy(v.begin(), v.end(), ostream_iterator<T>(os, " "));
     return os;
 }
+
+void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, double a) {
+  int N = toGrid->getM();
+  double *U = grid->getU();
+  double CFL = deltaT*a/h;
+
+  if ( FDM.compare("Upwind") == 0 ) {
+    for (int i = 0; i < N; i++) 
+      U[i] = U[i] + CFL(U[i-1] - U[i]);  
+  }
+  else
+    cout << "Specified " << FDM <<" has not been implemented yet" << endl;
+} 
 
 void stepInTime(SparseMatrix<double>* fda, SparseMatrix<double>* identity, Geometry* grid, double k, double h, double a) {
   //cout << *lfda << endl;
