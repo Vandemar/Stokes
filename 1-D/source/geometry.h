@@ -13,7 +13,7 @@ class Geometry {
     double getDh() const;
     //returns array U
     double* getU();
-    //returns a pointer to an array without the extra 2 cells
+    //returns a pointer that points to a copy of the grid without the extra 2 cells
     double* dispU();
 //    double* getTB();
     //setter methods

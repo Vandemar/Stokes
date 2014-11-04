@@ -1,19 +1,17 @@
 #include <boost/program_options.hpp>
 #include <boost/lexical_cast.hpp>
-namespace po = boost::program_options;
-
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
-
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <vector>
 #include "geometry.h"
-#include "dataWindow.h"
 //#include "hdf5.h"
 #include <cmath>
+#include <string>
 
+namespace po = boost::program_options;
 using namespace std;
 using namespace Eigen;
 
@@ -25,6 +23,8 @@ void stepInTime(SparseMatrix<double>* fd, SparseMatrix<double>* cd, Geometry* gr
 double L1_norm(Geometry *toGrid, double *numerical_solution);
 double L1_norm(Geometry *toGrid, double *numerical_solution);
 double LInfinity_norm(Geometry *toGrid, double *numerical_solution);
+void writeToFile(double *toData, double dim, ofstream &outputFile);
+void writeToStdout(double *toData, double dim);
 //void writeH5(std::ofstream xdm5, string outputDir, Geometry* toGrid, int timeStep);
 
 //This program models the advection equation for various conservative finite difference methods
@@ -38,6 +38,7 @@ int main(int ac, char *av[]) {
     string FDM;
     string config_file;
     string outputDir;
+    string data_fileName;
 
   try {
     //Set of options for Command Line
@@ -58,6 +59,7 @@ int main(int ac, char *av[]) {
       ("advectionConstant", po::value<double>(&a), "speed")
       ("outputDirectory", po::value<string>(&outputDir), "Output Directory")
       ("CFL", po::value<double>(&CFL), "CFL number")
+      ("dataFilename", po::value<string>(&data_fileName), "Filename for initial data and final data to be written to")
     ;
     
     po::options_description cmdline_options;
@@ -101,7 +103,13 @@ int main(int ac, char *av[]) {
     cerr << "exception of unknown type";
     return 1;
   }
+  
+  //Opening output stream
+  std::ofstream fs;
+  //fs.open((outputDir + data_fileName).c_str(), ios::out);
+  fs.open((outputDir + data_fileName).c_str());
 
+  
   //Initializing the Problem
   h = 1/cellCount;
   dt = CFL*h/a;
@@ -110,20 +118,26 @@ int main(int ac, char *av[]) {
   Geometry grid(cellCount, h, icType); 
   Geometry* toGrid = &grid;
   int n = (int) toGrid->getM();
+  double m = toGrid->getM();
   int i,j;
   cout << "Spacing of adjacent cells is: " << h << "\n";
   cout << "Number of Time Steps is set to: " << ts << "\n";
-  DataWindow<double> uWindow (grid.dispU(), grid.getM(), 1);
+  double* cellSnapshot = toGrid->dispU();
+  writeToStdout(cellSnapshot, m );
   cout << "At time step 0:" << endl;
   cout << "Initial conditions have been set to a " << icType << endl;
-  cout << uWindow.displayMatrix() << endl;
+  cout << "Writing data to " << data_fileName << endl;
   for( int i=0; i<ts; i++) {
     computeNextTimeStep(toGrid, FDM, dt, h, a); 
+    cellSnapshot = toGrid->dispU();
+    //writeToStdout(cellSnapshot, m );
+    writeToFile(cellSnapshot,m,fs);
   }
-  
-    DataWindow<double> uNextWindow (toGrid->dispU(), toGrid->getM(), 1);
-    cout << uNextWindow.displayMatrix() << endl << endl; 
+
+  cellSnapshot = toGrid->dispU();
+  writeToStdout(cellSnapshot, m );
    
+  fs.close();
   return 0;
 }
 
@@ -161,7 +175,18 @@ double LInfinity_norm(Geometry *toGrid, double *numerical_solution) {
   }
   return max;
 }
- 
+
+void writeToFile(double *toData, double dim, ofstream &outputFile) {
+  for(int i = 0; i < dim; i++) {
+    outputFile << "x:" << i/dim << "Value:" << toData[i] << "| ";
+  }
+  outputFile << endl; 
+}
+void writeToStdout(double *toData, double dim){
+  for(int i = 0; i < dim; i++) {
+    cout << "x:" << i/dim << "Value:" << toData[i] << "| ";
+  }
+}
 // ----------------------------
 //First Order Difference
 /*

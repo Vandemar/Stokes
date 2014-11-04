@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <Eigen/Dense>
+#include <fstream>
 
 using namespace Eigen;
 using namespace std;
@@ -11,6 +12,7 @@ class DataWindow {
     DataWindow (T* _basePtr, unsigned int _columns, unsigned int _rows);
     T& operator() (unsigned int _col, unsigned int _row);
     const string displayMatrix();
+    const string writeMatrix(fstream ostream);
   private:
     T*           __basePtr;
     unsigned int __cols;
@@ -33,4 +35,11 @@ template<class T>
 const string DataWindow<T>::displayMatrix() {
   std::cout << Eigen::Map<Matrix<T, Dynamic, Dynamic, RowMajor> >(__basePtr, __rows, __cols).colwise().reverse();
   return "";
+}
+
+template<class T>
+const string DataWindow<T>::writeMatrix(fstream fs) {
+  for( int i = 0; i < __cols; i++) {
+    fs << i/__cols << " " << __basePtr[i] << endl;
+  }
 }
