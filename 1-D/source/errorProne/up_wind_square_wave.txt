@@ -1,0 +1,57 @@
+For Upwind
+Number of cells: 64
+	 L1 Norm: 0.323585
+		 Convergence Rate: 6.95314e-310
+	 L2 Norm: 0.111959
+		 Convergence Rate: 6.89891e-310
+	 LInf Norm: 0.492494
+
+		 Convergence Rate: 0
+Number of cells: 128
+	 L1 Norm: 0.231626
+		 Convergence Rate: 0.482351
+	 L2 Norm: 0.0697824
+		 Convergence Rate: 0.682033
+	 LInf Norm: 0.492355
+
+		 Convergence Rate: 0.000406862
+Number of cells: 256
+	 L1 Norm: 0.163864
+		 Convergence Rate: 0.499295
+	 L2 Norm: 0.0480332
+		 Convergence Rate: 0.538831
+	 LInf Norm: 0.494437
+
+		 Convergence Rate: -0.00608748
+Number of cells: 512
+	 L1 Norm: 0.115876
+		 Convergence Rate: 0.49992
+	 L2 Norm: 0.0339379
+		 Convergence Rate: 0.501136
+	 LInf Norm: 0.496066
+
+		 Convergence Rate: -0.0047448
+Number of cells: 1024
+	 L1 Norm: 0.0819389
+		 Convergence Rate: 0.49996
+	 L2 Norm: 0.0239988
+		 Convergence Rate: 0.499931
+	 LInf Norm: 0.497218
+
+		 Convergence Rate: -0.00334734
+Number of cells: 2048
+	 L1 Norm: 0.0579403
+		 Convergence Rate: 0.49998
+	 L2 Norm: 0.0169701
+		 Convergence Rate: 0.499965
+	 LInf Norm: 0.498033
+
+		 Convergence Rate: -0.00236226
+Number of cells: 4096
+	 L1 Norm: 0.0409703
+		 Convergence Rate: 0.49999
+	 L2 Norm: 0.0119999
+		 Convergence Rate: 0.499982
+	 LInf Norm: 0.498609
+
+		 Convergence Rate: -0.00166805

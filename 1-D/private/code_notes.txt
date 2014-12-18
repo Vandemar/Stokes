@@ -1,0 +1,86 @@
+These notes are for homework assignment CA 01 for Mat228a
+
+By: Steven Wopschall
+10/30/14
+
+The executable is ca1.x
+
+The source program file is ca1.f
+
+The module files are denoted [name]_m.f
+
+The module object ".o" files are denoted [name]_m.o
+
+The module .mod files are named similarly
+
+The code should be able to be run with the command "./ca1.x"
+
+Right now the code will run all three numerical methods with m = 2^6 to
+m = 2^16.  This takes on the order of five to seven hours. The loops in
+ca1.f can be modified to change the discretizations, but the discretizations
+are hard coded into fd_methods_m.f and some dissection of the code will
+need to be done to make the correct changes, should one desire different
+analysis parameters.
+
+There is no makefile, but the object files are created with the command: 
+
+     gfortran -c fd_methods_m.f
+
+for example.  There is some hierarchy associated with which object
+file to compile first due to the USE association in each module.
+
+The executable was created with the command:
+
+     gfortran ca1.f fd_methods_m.o initial_conds_m.o norms_m.o -o ca1.x
+
+To run the code successfully, certain directories need to be created
+in order for the output to be written.
+
+The following directories are to be placed in the same directory as the 
+executable and module files, etc.:
+
+    output
+    norms
+
+Within the output directory there needs to be the following directory
+
+    output/exact_plots
+
+A bash script entitled "plot_data.sh" is in the output directory, which 
+outputs numerical method plots in the output/plots directory.  The code
+automatically writes exact data to the output/exact_plots directory, but
+currently there is no script to plot just the exact solution data.
+
+Within the "norms" directory, there need to be the following directories:
+
+    norms/plots
+    norms/convergence_data
+
+and within the convergence_data directory, there is the following directory:
+
+    norms/convergence_data/excel
+
+In the "norms" directory, there is an executable entitled "norm_processing.x"
+This can be run with the following command:
+
+    ./norm_processing.x
+
+This processes the norm data up to l = 12.  The output is output to:
+
+    norms/convergence_data/excel
+
+For each file in this directory, the first column is the value of H,
+the second column is the one norm, the third column is the one norm
+rate of convergence, the fourth column is the 2 norm, the fifth column
+is the rate of convergence in the 2 norm, the sixth column is the inf norm
+and the last column is the rate in this norm.  The files are labeled
+
+    lw1_.... for the lax-wendroff method for initial conditions 1
+    upwind3_....for the upwind method for initial conditions 3
+    etc.
+
+The bash script "convergence_plots.sh" in the "norms" directory can be
+run to create convergence plots that are located in norms/plots.
+
+This post-processing system is not the most elegant so I can definitely
+help anyone trying to run my code.

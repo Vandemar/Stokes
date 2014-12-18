@@ -1,0 +1,57 @@
+For Lax-Wendroff
+Number of cells: 64
+	 L1 Norm: 0.0279146
+		 Convergence Rate: 6.95314e-310
+	 L2 Norm: 0.00232346
+		 Convergence Rate: 6.90905e-310
+	 LInf Norm: 0.188131
+
+		 Convergence Rate: 0
+Number of cells: 128
+	 L1 Norm: 0.0144871
+		 Convergence Rate: 0.946247
+	 L2 Norm: 0.000902805
+		 Convergence Rate: 1.36379
+	 LInf Norm: 0.153656
+
+		 Convergence Rate: 0.292032
+Number of cells: 256
+	 L1 Norm: 0.0074259
+		 Convergence Rate: 0.964134
+	 L2 Norm: 0.00035181
+		 Convergence Rate: 1.35962
+	 LInf Norm: 0.124577
+
+		 Convergence Rate: 0.302667
+Number of cells: 512
+	 L1 Norm: 0.00382659
+		 Convergence Rate: 0.956506
+	 L2 Norm: 0.00013762
+		 Convergence Rate: 1.3541
+	 LInf Norm: 0.100474
+
+		 Convergence Rate: 0.31022
+Number of cells: 1024
+	 L1 Norm: 0.0019708
+		 Convergence Rate: 0.957276
+	 L2 Norm: 5.40494e-05
+		 Convergence Rate: 1.34834
+	 LInf Norm: 0.0807192
+
+		 Convergence Rate: 0.315834
+Number of cells: 2048
+	 L1 Norm: 0.00101523
+		 Convergence Rate: 0.956976
+	 L2 Norm: 2.1307e-05
+		 Convergence Rate: 1.34295
+	 LInf Norm: 0.064661
+
+		 Convergence Rate: 0.320016
+Number of cells: 4096
+	 L1 Norm: 0.000523413
+		 Convergence Rate: 0.955786
+	 L2 Norm: 8.42677e-06
+		 Convergence Rate: 1.33828
+	 LInf Norm: 0.0516851
+
+		 Convergence Rate: 0.323147

@@ -1,0 +1,48 @@
+Number of cells: 64
+	 L1 Norm: 0.00963421
+		 Convergence Rate: 6.93558e-310
+	 L2 Norm: 0.00133709
+		 Convergence Rate: 6.93553e-310
+	 LInf Norm: 0.0151126
+
+		 Convergence Rate: 6.95332e-310
+Number of cells: 128
+	 L1 Norm: 0.00240939
+		 Convergence Rate: 1.9995
+	 L2 Norm: 0.00023652
+		 Convergence Rate: 2.49907
+	 LInf Norm: 0.00378353
+
+		 Convergence Rate: 1.99795
+Number of cells: 256
+	 L1 Norm: 0.000602383
+		 Convergence Rate: 1.99991
+	 L2 Norm: 4.18166e-05
+		 Convergence Rate: 2.49981
+	 LInf Norm: 0.000946157
+
+		 Convergence Rate: 1.99958
+Number of cells: 512
+	 L1 Norm: 0.000150598
+		 Convergence Rate: 1.99998
+	 L2 Norm: 7.39241e-06
+		 Convergence Rate: 2.49996
+	 LInf Norm: 0.000236554
+
+		 Convergence Rate: 1.99991
+Number of cells: 1024
+	 L1 Norm: 3.76495e-05
+		 Convergence Rate: 2
+	 L2 Norm: 1.30681e-06
+		 Convergence Rate: 2.49999
+	 LInf Norm: 5.91395e-05
+
+		 Convergence Rate: 1.99998
+Number of cells: 2048
+	 L1 Norm: 9.41239e-06
+		 Convergence Rate: 2
+	 L2 Norm: 2.31015e-07
+		 Convergence Rate: 2.5
+	 LInf Norm: 1.47849e-05
+
+		 Convergence Rate: 1.99999

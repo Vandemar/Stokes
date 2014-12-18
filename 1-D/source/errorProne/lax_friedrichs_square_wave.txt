@@ -1,0 +1,57 @@
+For Lax-Friedrichs
+Number of cells: 64
+	 L1 Norm: 0.430003
+		 Convergence Rate: 6.95314e-310
+	 L2 Norm: 0.186093
+		 Convergence Rate: 6.92467e-310
+	 LInf Norm: 0.500584
+
+		 Convergence Rate: 0
+Number of cells: 128
+	 L1 Norm: 0.331551
+		 Convergence Rate: 0.375113
+	 L2 Norm: 0.116547
+		 Convergence Rate: 0.675106
+	 LInf Norm: 0.493904
+
+		 Convergence Rate: 0.0193818
+Number of cells: 256
+	 L1 Norm: 0.237934
+		 Convergence Rate: 0.478671
+	 L2 Norm: 0.0721057
+		 Convergence Rate: 0.692732
+	 LInf Norm: 0.493
+
+		 Convergence Rate: 0.00264473
+Number of cells: 512
+	 L1 Norm: 0.168354
+		 Convergence Rate: 0.49906
+	 L2 Norm: 0.0493687
+		 Convergence Rate: 0.546517
+	 LInf Norm: 0.494832
+
+		 Convergence Rate: -0.0053524
+Number of cells: 1024
+	 L1 Norm: 0.119051
+		 Convergence Rate: 0.49992
+	 L2 Norm: 0.0348681
+		 Convergence Rate: 0.50169
+	 LInf Norm: 0.496345
+
+		 Convergence Rate: -0.00440317
+Number of cells: 2048
+	 L1 Norm: 0.0841842
+		 Convergence Rate: 0.499961
+	 L2 Norm: 0.0246565
+		 Convergence Rate: 0.499937
+	 LInf Norm: 0.497415
+
+		 Convergence Rate: -0.00310851
+Number of cells: 4096
+	 L1 Norm: 0.059528
+		 Convergence Rate: 0.49998
+	 L2 Norm: 0.0174352
+		 Convergence Rate: 0.499967
+	 LInf Norm: 0.498172
+
+		 Convergence Rate: -0.00219402
