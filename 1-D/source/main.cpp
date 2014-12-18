@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <vector>
@@ -10,6 +11,7 @@
 //#include "hdf5.h"
 #include <cmath>
 #include <string>
+#include "math.h"
 
 namespace po = boost::program_options;
 using namespace std;
@@ -20,16 +22,21 @@ template<class T>
 ostream& operator<<(ostream& os, const vector<T>& v);
 void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, double a); 
 void stepInTime(SparseMatrix<double>* fd, SparseMatrix<double>* cd, Geometry* grid, double k, double h, double a);
-double L1_norm(Geometry *toGrid, double *numerical_solution);
-double L1_norm(Geometry *toGrid, double *numerical_solution);
-double LInfinity_norm(Geometry *toGrid, double *numerical_solution);
-void writeToFile(double *toData, double dim, ofstream &outputFile);
+double L1_norm(double *exact_solution, double *numerical_solution, int m);
+double L2_norm(double *exact_solution, double *numerical_solution, int m);
+double LInfinity_norm(double *exact_solution, double *numerical_solution, int m);
+void writeToFile(double *toData, double dim, double timeStp);
 void writeToStdout(double *toData, double dim);
 //void writeH5(std::ofstream xdm5, string outputDir, Geometry* toGrid, int timeStep);
 
+
+//global variables
+//Opening output stream
+std::ofstream *ptrFs;
+
 //This program models the advection equation for various conservative finite difference methods
 int main(int ac, char *av[]) {
-    double cellCount = 0;
+    int cellCount = 0;
     double h = 0.0;
     double a = 0.0;
     double startT, endT, dt, ts;
@@ -38,7 +45,8 @@ int main(int ac, char *av[]) {
     string FDM;
     string config_file;
     string outputDir;
-    string data_fileName;
+    string fileSuffix;
+    string fileName;
 
   try {
     //Set of options for Command Line
@@ -50,7 +58,7 @@ int main(int ac, char *av[]) {
     //Set of options for Config file
     po::options_description tokens("Parameters for stokes solver");
     tokens.add_options() 
-      ("M", po::value<double>(&cellCount), "number of cells within the domain, must be a power of 2")
+      ("M", po::value<int>(&cellCount), "number of cells within the domain, must be a power of 2")
       ("startTime", po::value<double>(&startT), "Initial Time")
       ("endTime", po::value<double>(&endT), "End Time")
       ("finiteDifferenceMethod", po::value<string>(&FDM), "Possibilities are Upwind, Lax-Friedrichs, Lax-Wendroff")
@@ -59,7 +67,7 @@ int main(int ac, char *av[]) {
       ("advectionConstant", po::value<double>(&a), "speed")
       ("outputDirectory", po::value<string>(&outputDir), "Output Directory")
       ("CFL", po::value<double>(&CFL), "CFL number")
-      ("dataFilename", po::value<string>(&data_fileName), "Filename for initial data and final data to be written to")
+      ("suffixFilename", po::value<string>(&fileSuffix), "Filename for initial data and final data to be written to")
     ;
     
     po::options_description cmdline_options;
@@ -104,84 +112,130 @@ int main(int ac, char *av[]) {
     return 1;
   }
   
-  //Opening output stream
-  std::ofstream fs;
-  //fs.open((outputDir + data_fileName).c_str(), ios::out);
-  fs.open((outputDir + data_fileName).c_str());
-
+  //DEfining the variables
+  double conRateL1=0, conRateL2=0, conRateLInf=0;
+  double lastL1=0,lastL2=0,lastLInf=0;
+  bool firstItr = true;
+  double *cellSnapshot;
+  fileName = outputDir + '/' + FDM + "_" + icType + ".txt";
+  ofstream stats(fileName.c_str());
+  ostringstream sc;
+  int n;
+  double m;
   
   //Initializing the Problem
-  h = 1/cellCount;
-  dt = CFL*h/a;
-  ts = (endT-startT)/dt;
-  // Plus 2 since we need one extra cell on each far side due to periodicness. 
-  Geometry grid(cellCount, h, icType); 
-  Geometry* toGrid = &grid;
-  int n = (int) toGrid->getM();
-  double m = toGrid->getM();
-  int i,j;
-  cout << "Spacing of adjacent cells is: " << h << "\n";
-  cout << "Number of Time Steps is set to: " << ts << "\n";
-  double* cellSnapshot = toGrid->dispU();
-  writeToStdout(cellSnapshot, m );
-  cout << "At time step 0:" << endl;
-  cout << "Initial conditions have been set to a " << icType << endl;
-  cout << "Writing data to " << data_fileName << endl;
-  for( int i=0; i<ts; i++) {
-    computeNextTimeStep(toGrid, FDM, dt, h, a); 
-    cellSnapshot = toGrid->dispU();
-    //writeToStdout(cellSnapshot, m );
-    writeToFile(cellSnapshot,m,fs);
-  }
+  //For assignment
+  for( int k=6; k < 12; k++, cellCount *= 2) {
+   //whats going on when one casts an int to a double. Are the terms distributed to the exponent, mantissa appropriately? 
+    h = 1/cellCount;
+    sc << cellCount;
+    string count = sc.str();
+    fileName = outputDir + '/' + FDM + "for" + icType + "_h_" + count + '.' + fileSuffix;
+    ofstream fs(fileName.c_str());
+    ptrFs = &fs;
+    
+    dt = CFL*h/a;
+    ts = (endT-startT)/dt;
+    // Plus 2 since we need one extra cell on each far side due to periodicness. 
+    //Initializing the grid, and toGrid will then be refrence to the grid. This will allow me to pass the Grid's address location in memory to a function.
+    Geometry grid(cellCount, icType); 
+    Geometry* toGrid = &grid;
+    n = (int) toGrid->getM();
+    m = toGrid->getM();
+    int i,j;
+    
+    cout << "Spacing of adjacent cells is: " << h << "\n";
+    cout << "Number of Time Steps is set to: " << ts << "\n";
+    cout << "Initial conditions have been set to a " << icType << endl;
+    cout << "Writing data to " << fileName << endl;
+ 
+    i = 0; 
+    if(firstItr)
+      writeToFile(toGrid->dispU(),n, i);
+    //The main work:
+    for( double i=0; i<(double)ts; i++) {
+      //cout << "At time step " << i << ":" << endl;
+      cellSnapshot = toGrid->dispU();
+      computeNextTimeStep(toGrid, FDM, dt, h, a); 
+    }
 
-  cellSnapshot = toGrid->dispU();
-  writeToStdout(cellSnapshot, m );
-   
-  fs.close();
+    Geometry grid_tmp(cellCount, h, icType); 
+    writeToFile(cellSnapshot, n, (int) (ts-1));
+    fs.close();
+
+    double L1, L2, LInf;
+    L1 = L1_norm(grid_tmp.dispU(), cellSnapshot, n);
+    L2 = L2_norm(grid_tmp.dispU(), cellSnapshot, n);
+    LInf = LInfinity_norm(grid_tmp.dispU(), cellSnapshot, n);
+  
+    if (!firstItr) {
+      conRateL1 = log2 (lastL1/L1);
+      conRateL2 = log2 (lastL2/L2);
+      conRateLInf = log2 (lastLInf/LInf);
+    }
+    else 
+      firstItr = false;
+
+    stats << "Number of cells: " << cellCount  << endl;
+    stats << "\t L1 Norm: " << L1 << endl;
+    if(!firstItr)
+      stats << "\t\t Convergence Rate: " << conRateL1 << endl;
+    stats << "\t L2 Norm: " << L2 << endl;
+    if(!firstItr)
+      stats << "\t\t Convergence Rate: " << conRateL2 << endl;
+    stats << "\t LInf Norm: " << LInf << endl << endl;
+    if(!firstItr)
+      stats << "\t\t Convergence Rate: " << conRateLInf << endl;
+
+    lastL1 = L1;
+    lastL2 = L2;
+    lastLInf = LInf;
+  }   
+  
+  stats.close();
+
   return 0;
 }
 
 
-double L1_norm(Geometry *toGrid, double *numerical_solution ) {
-   double sum;
-  double N = toGrid->getM();
-  double* numerical_sol = toGrid->dispU();
-
-  for(int i=0; i < N; i++) {
-    sum += abs(numerical_sol[i]);
+double L1_norm(double *exact_solution, double *numerical_solution, int m ) {
+  double sum;
+  for(int i=0; i < m; i++) {
+    sum += abs(exact_solution[i] - numerical_solution[i]);
   }
-  return sum;
+  return sum/m;
 }   
 
-double L2_norm(Geometry *toGrid, double *numerical_solution) {
-  double sum;
-  double N = toGrid->getM();
-  double* numerical_sol = toGrid->dispU();
-
-  for(int i=0; i < N; i++) {
-    sum += numerical_sol[i]*numerical_sol[i]; 
+double L2_norm(double *exact_sol, double *numerical_solution, int m) {
+  double sum=0, error;
+  double h = 1/(double) m;
+  for(int i=0; i < m; i++) {
+    error = abs(exact_sol[i] - numerical_solution[i]);
+      sum = sum + (h*error*error);
+//    sum += pow(error,2); 
   }
-  return sum;
+  
+  //return pow(sum,0.5)/((double) m);
+  return std::sqrt(sum);
 }
   
-double LInfinity_norm(Geometry *toGrid, double *numerical_solution) {
-   double max=0;
-  double N = toGrid->getM();
-  double* numerical_sol = toGrid->dispU();
+double LInfinity_norm(double *exact_solution, double *numerical_solution, int m) {
+  double max=0;
 
-  for(int i=0; i < N; i++) {
-    if ( abs(numerical_sol[i]) > max ) 
-      max = numerical_sol[i];
+  for(int i=0; i < m; i++) {
+    if ( abs(numerical_solution[i]-exact_solution[i]) > max ) 
+      max = abs(numerical_solution[i]-exact_solution[i]);
   }
   return max;
 }
 
-void writeToFile(double *toData, double dim, ofstream &outputFile) {
+void writeToFile(double *toData, double dim, double timeStp) {
   for(int i = 0; i < dim; i++) {
-    outputFile << "x:" << i/dim << "Value:" << toData[i] << "| ";
+    //Format: <time step> <space coords> <u (numerical approximation)>
+    *ptrFs << timeStp << ',' << i/dim << ',' << toData[i] << endl; 
   }
-  outputFile << endl; 
 }
+
 void writeToStdout(double *toData, double dim){
   for(int i = 0; i < dim; i++) {
     cout << "x:" << i/dim << "Value:" << toData[i] << "| ";
@@ -239,10 +293,10 @@ ostream& operator<<(ostream& os, const vector<T>& v)
     copy(v.begin(), v.end(), ostream_iterator<T>(os, " "));
     return os;
 }
-
+//Add tow ghost cells per side
 void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, double a) {
   int N = (int) toGrid->getM();
-  double *U = toGrid->getU();
+  double *grid = toGrid->getGrid();
   double *UNext = new double[N+2];
   double CFL = (deltaT*a)/h;
 
@@ -260,8 +314,8 @@ void computeNextTimeStep(Geometry *toGrid, string FDM, double deltaT, double h, 
   else if ( FDM.compare("Lax-Wendroff") == 0 ) {
     double uLeftHalf, uRightHalf;
     for (int i = 1; i < N+1; i++) {
-      uRightHalf = 0.5 * (U[i] + U[i+1]) + (CFL/2) * (U[i] - U[i+1]);
-      uLeftHalf = 0.5 * (U[i] + U[i-1]) + (CFL/2) * (U[i] - U[i-1]);
+      uRightHalf = 0.5 * (U[i] + U[i+1]) - (CFL/2) * (U[i+1] - U[i]);
+      uLeftHalf = 0.5 * (U[i] + U[i-1]) - (CFL/2) * (U[i] - U[i-1]);
       UNext[i] = U[i] + CFL * (uLeftHalf - uRightHalf); 
     }
   }

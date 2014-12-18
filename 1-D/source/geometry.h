@@ -3,25 +3,36 @@
 
 class Geometry {
   public:
-    Geometry(double numberOfCells, double h, std::string initialCond);
+ //Adding 4 ghost cells, 2 on each side
+    Geometry(int nCells, std::string initialCond);
     ~Geometry();
-  
+ 
     //getter methods
-    //Returns number of cells (1-D)
+
     double getM() const;
-    //Returns delta h
     double getDh() const;
-    //returns array U
-    double* getU();
+    double* getGrid();
     //returns a pointer that points to a copy of the grid without the extra 2 cells
     double* dispU();
 //    double* getTB();
     //setter methods
 
     private:
-    double M;
-    double h; 
-    double* U;
+    int nCells;
+    // Ghosts Ooooooooooo
+    int nGhostCells;
+    // T.C.C = Total Cell Count
+    int TCC;
+    // Only one D for now.... muhahahah
+    int nDim;
+    double deltaH; 
+    double* grid;
+    double* firstCell;
+    double* currentCell;
+    double* lastCell;
+   
+   //Types include the Square Wave, Semicircle, and the Gaussian Pulse
+    initializeGrid(string type); 
 };   
 
 inline double Geometry::getM() const { return M; }
